@@ -1,0 +1,144 @@
+body {
+    font-family: 'Arial', sans-serif;
+    background: linear-gradient(to right, #276a81, #276a81);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    color: #fff;
+}
+
+.container {
+    background: #fff;
+    color: #333;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    width: 90%;
+    max-width: 800px;
+    text-align: center;
+    overflow-x: auto;
+}
+
+header h1 { 
+    color: #bad1e5;
+    font-size: 2em;
+    margin-bottom: 0.2em;
+}
+
+header h2 {
+    color: #2575fc;
+    font-size: 1.5em;
+    margin-bottom: 1em;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+table th, table td {
+    padding: 12px 15px;
+    border: 1px solid #ddd;
+}
+
+table th {
+    background-color: #889bac;
+    color: #fff;
+}
+
+table tbody tr:nth-child(even) {
+    background-color: #f3f3f3;
+}
+
+table tbody tr:nth-child(odd) {
+    background-color: #fff;
+}
+
+table tbody tr:hover {
+    background-color: #dcdcdc;
+}
+
+table a {
+    color: #2575fc;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+table a:hover {
+    text-decoration: underline;
+}
+
+.edit {
+    color: #4CAF50; /* Green */
+}
+
+.delete {
+    color: #f44336; /* Red */
+}
+
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    table, table thead, table tbody, table th, table td, table tr {
+        display: block;
+    }
+
+    table thead tr {
+        display: none;
+    }
+
+    table tr {
+        margin-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+        background: #f3f3f3;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        padding: 10px;
+    }
+
+    table td {
+        border: none;
+        border-bottom: 1px solid #ddd;
+        position: relative;
+        padding-left: 50%;
+        padding-right: 10px;
+        text-align: left;
+        background: #fff;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    table td:before {
+        position: absolute;
+        top: 50%;
+        left: 10px;
+        width: 45%;
+        padding-right: 10px;
+        white-space: nowrap;
+        transform: translateY(-50%);
+        font-weight: bold;
+        color: #555;
+    }
+
+    table td:nth-of-type(1):before { content: "ID"; }
+    table td:nth-of-type(2):before { content: "Primeiro Nome"; }
+    table td:nth-of-type(3):before { content: "E-mail"; }
+    table td:nth-of-type(4):before { content: "Ações"; }
+
+    .back-arrow {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .back-arrow a {
+        font-size: 1em;
+        margin-bottom: 10px;
+    }
+}

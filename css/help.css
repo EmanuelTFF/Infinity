@@ -1,0 +1,132 @@
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #bad1e5; /* Fundo azul claro */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    flex-direction: column; /* Alinhar itens na vertical */
+}
+.chat-container {
+    width: 60%;
+    background-color: #fff;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.chat-header {
+    background-color: #276a81; /* Azul do cabeçalho */
+    padding: 10px;
+    text-align: center;
+    color: #fff;
+    border-radius: 10px 10px 0 0;
+}
+
+.chat-body {
+    padding: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+    background-color: #f7f9fc; /* Fundo azul claro para o corpo */
+}
+
+.chat-footer {
+    display: flex;
+    border-top: 1px solid #ddd;
+    padding: 10px;
+    background-color: #fff; /* Fundo branco para o rodapé */
+}
+
+.chat-footer input[type="text"] {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.chat-footer button {
+    background-color: #276a81;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    margin-left: 10px;
+    cursor: pointer;
+}
+
+.user-message, .bot-message {
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 80%;
+    word-wrap: break-word;
+}
+
+.user-message {
+    background-color: #276a81;
+    color: #fff;
+    align-self: flex-end;
+    margin-left: auto;
+}
+
+.bot-message {
+    background-color: #f1f1f1;
+    color: #333;
+    align-self: flex-start;
+    margin-right: auto;
+}
+
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.typing-indicator p {
+    background-color: #f1f1f1;
+    color: #333;
+    padding: 10px;
+    border-radius: 5px;
+    font-style: italic;
+}
+
+.typing-indicator p::after {
+    content: " ";
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    background-color: #333;
+    border-radius: 50%;
+    animation: blink 1s infinite steps(1, end);
+}
+
+@keyframes blink {
+    0% { opacity: 0.2; }
+    20% { opacity: 1; }
+    100% { opacity: 0.2; }
+}
+
+/* Breadcrumb (localização) */
+.breadcrumb {
+    width: 60%; /* Mesma largura do chat-container */
+    text-align: center; /* Centraliza o conteúdo dentro do breadcrumb */
+    padding: 15px;
+    background-color: #bad1e5; /* Fundo azul claro */
+    margin-bottom: 15px;
+    border-radius: 5px;
+}
+
+
+.breadcrumb a {
+    text-decoration: none;
+    color: #276a81;
+    font-weight: bold;
+}
+
+.breadcrumb span {
+    margin: 0 5px;
+    color: #6c757d; /* Cor do separador */
+}
