@@ -24,7 +24,7 @@ $product_id = $_GET['id'] ?? null;
 if ($product_id === null) {
     echo 'ID de produto não fornecido!';
     exit;
-} 
+}
 // Consultar detalhes do produto
 $stmt = $pdo->prepare('SELECT * FROM products WHERE id = :id');
 $stmt->execute([':id' => $product_id]);
@@ -35,9 +35,7 @@ if (!$product) {
     echo 'Produto não encontrado!';
     exit;
 }
-
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 
@@ -46,120 +44,146 @@ if (!$product) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $product['name']; ?></title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #bad1e5;
-            color: #333;
-            padding: 20px;
+          /* Seu CSS de estilização permanece igual */
+          * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
         }
 
-        .container {
-            display: flex;
-            flex-wrap: wrap;
-            max-width: 1200px;
-            margin: 0 auto;
+        body {
+            background-color: #bad1e5;
+            color: #333;
+            line-height: 1.6;
             padding: 20px;
         }
 
         .breadcrumbs {
+            font-size: 14px;
             margin-bottom: 20px;
-            font-size: 19px;
             text-align: center;
         }
 
         .breadcrumbs a {
-            color: #276a81;
+            color: #555;
             text-decoration: none;
+            transition: color 0.3s ease;
         }
 
         .breadcrumbs a:hover {
-            text-decoration: underline;
+            color: #276a81;
         }
 
-        .breadcrumbs span {
-            color: #555;
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            margin: 0 auto;
         }
 
         .image-gallery {
-            width: 100%;
-            max-width: 400px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: auto;
+            flex: 0 1 40%;
+            max-height: 600px;
+            text-align: center;
+            padding: 10px;
+            position: relative;
+            animation: fadeInLeft 1s ease-out;
         }
 
         .image-gallery img {
             width: 100%;
-            height: auto;
+            height: 100%;
+            object-fit: cover;
             border-radius: 10px;
-            margin-bottom: 20px;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
         }
 
         .product-details {
-            width: 100%;
-            max-width: 600px;
-            background-color: #fff;
+            flex: 0 1 40%;
             padding: 20px;
+            background-color: #fff;
             border-radius: 10px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-            margin: auto;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
+            animation: fadeInRight 1s ease-out;
+            max-height: 600px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
 
         .product-details h1 {
-            font-size: 24px;
+            font-size: 2rem;
             color: #276a81;
+            margin-bottom: 10px;
         }
 
-        .price {
-            font-size: 28px;
-            color: #276a81;
-            margin-top: 15px;
-        }
-
-        .original-price {
+        .product-details .original-price {
             text-decoration: line-through;
             color: #999;
-            font-size: 18px;
+            font-size: 1.1rem;
+            margin-bottom: 5px;
         }
 
-        .parcelamento {
-            font-size: 14px;
-            color: #555;
-            margin-top: 10px;
-        }
-
-        .stock-info {
-            margin-top: 10px;
+        .product-details .price {
+            font-size: 1.8rem;
             color: #276a81;
             font-weight: bold;
+            margin-bottom: 10px;
         }
 
-        .btn-add-cart {
+        .product-details .parcelamento,
+        .product-details .stock-info {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+        }
+
+        .product-details .btn-add-cart {
             display: inline-block;
+            padding: 10px 20px;
             background-color: #276a81;
-            color: white;
-            padding: 15px 30px;
-            font-size: 18px;
-            text-align: center;
-            text-decoration: none;
+            color: #fff;
+            border: none;
             border-radius: 5px;
-            margin-top: 20px;
-            transition: background-color 0.3s;
-            width: 80%;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            animation: bounceIn 1.2s ease-out;
         }
 
-        .btn-add-cart:hover {
-            background-color: #1a4c5c;
+        .product-details .btn-add-cart:hover {
+            background-color: #276a81;
+            transform: translateY(-5px);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .product-details h1 {
+                font-size: 1.5rem;
+            }
+
+            .product-details .price {
+                font-size: 1.5rem;
+            }
+
+            .product-details .btn-add-cart {
+                font-size: 1rem;
+            }
         }
     </style>
 </head>
 
-<body><br><br><br><br><br>
+<body>
+
     <div class="breadcrumbs">
-        <a href="index.php">Inicio</a> >
-        <a href="index.php">produtos</a> >
+        <a href="index.php">Início</a> >
+        <a href="products.php">Produtos</a> >
         <span><?php echo $product['name']; ?></span>
     </div>
 
@@ -177,13 +201,13 @@ if (!$product) {
             <p class="parcelamento">Em até 12x de R$78,42 sem juros no cartão</p>
             <p class="stock-info">Pronta entrega 🚚</p>
 
-            <!-- Botão Adicionar ao Carrinho -->
             <form action="cart.php" method="POST" class="add-to-cart-form">
                 <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
                 <button type="submit" class="btn-add-cart">Adicionar ao Carrinho</button>
             </form>
         </div>
     </div>
+
 </body>
 
 </html>

@@ -95,7 +95,7 @@ session_start(); // Iniciar sessão aqui, no início do script
                 </h1>
 
                 <br><br><br>
-                <a href="#" class="home-btn">Navegar</a>
+                <a href="products.php" class="home-btn">Navegar</a>
             </div>
         </section>
         <div class="servicos">
@@ -118,7 +118,7 @@ session_start(); // Iniciar sessão aqui, no início do script
                 </div>
             </div>
             <div class="servicos-grid">
-                <a href="headset.php">
+               
                     <div class="servico-item" data-category="headset" data-price="349">
                         <img src="https://encrypted-tbn0.gstatic.com/shopping?q=tbn:ANd9GcQf3O0BM7ZyD3iWLTQTI-ylkJdO0Ek5d6PemQDNWmiob8tcHhWQKJq6outxoFQC21YCuuq2lCMJrYkPUOnHIQebvpNqpYjLSO8m3m4HuO8DwikvdklEc3vj-g&usqp=CAE"
                             alt="Headset 1">
@@ -126,24 +126,26 @@ session_start(); // Iniciar sessão aqui, no início do script
                             <h3 class="servico-title">Headset Gamer HyperX Cloud Stinger</h3>
                             <p class="servico-description"></p>
                         </div>
-                </a>
+        
             </div>
             <div class="servico-item" data-category="headset" data-price="499">
-                <a href="headset2.php?product_id=2">
+                
                     <img src="https://encrypted-tbn2.gstatic.com/shopping?q=tbn:ANd9GcSLYDZ8xOZZcjVz6nX_LZojOVvZWO-ZV-QUNojR24GJu5m8vDhrvzMdL7AloVj-sQqjlHdgkeZW54fWUnVC9i2A8ikVw5AHBlKPylVNXYtO4BZTZ5Lg60pG6A&usqp=CAE"
                         alt="">
                     <div class="servico-info">
                         <h3 class="servico-title">Headset Logitech G533 Wireless</h3>
                         <p class="servico-description"></p>
-                </a>
+    
             </div>
         </div>
         <div class="servico-item" data-category="microfone" data-price="399">
+            
             <img src="https://encrypted-tbn1.gstatic.com/shopping?q=tbn:ANd9GcQ0NbL_68W1RfCtFJYzoY6CwGMBq_ohpKkT6iL5w-deBqbI0B-YA0ITlTdh4I2npFwcCrR9d0he8_6Bl4fyOWYTlaxZWr5CClTJCRSVxhaLOvv6OsGpVjQ4&usqp=CAE"
                 alt="Headset 3">
             <div class="servico-info">
                 <h3 class="servico-title">Microfone HyperX</h3>
                 <p class="servico-description"></p>
+                
             </div>
         </div>
         <div class="servico-item" data-category="microfone" data-price="799">

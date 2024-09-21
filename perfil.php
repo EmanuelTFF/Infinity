@@ -248,7 +248,7 @@ if ($isAdmin && isset($_POST['update_user'])) {
                 <i class='bx bx-key'></i>
                 <p>Trocar senha</p>
             </a>
-            <a href="my_orders.php">
+            <a href="meus_pedidos.php">
                 <i class='bx bx-cart'></i>
                 <p>Meus pedidos</p>
             </a>

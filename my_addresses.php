@@ -11,6 +11,7 @@ if ($conn->connect_error) {
 
 $userId = $_SESSION['user_id'];
 
+// Verificar se o formulário foi enviado
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     if (isset($_POST['delete_address'])) {
         $conn->query("UPDATE users SET endereco_salvo = 0 WHERE id = $userId");
@@ -19,16 +20,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $cep = $_POST['cep'];
         $logradouro = $_POST['logradouro'];
         $bairro = $_POST['bairro'];
-        $cidade = $_POST['cidade'];
-        $estado = $_POST['estado'];
+        $cidade_id = $_POST['cidade']; // Agora usamos o ID da cidade
+        $estado_id = $_POST['estado']; // Agora usamos o ID do estado
         $numero = $_POST['numero'];
 
-        $conn->query("UPDATE users SET cep = '$cep', logradouro = '$logradouro', bairro = '$bairro', cidade = '$cidade', estado = '$estado', numero = $numero, endereco_salvo = 1 WHERE id = $userId");
+        // Atualizar as informações de endereço
+        $stmt = $conn->prepare("UPDATE users SET cep = ?, logradouro = ?, bairro = ?, cidade_id = ?, estado_id = ?, numero = ?, endereco_salvo = 1 WHERE id = ?");
+        $stmt->bind_param('sssiisi', $cep, $logradouro, $bairro, $cidade_id, $estado_id, $numero, $userId);
+        $stmt->execute();
         echo "Endereço atualizado com sucesso!";
     }
 }
 
-$user = $conn->query("SELECT * FROM users WHERE id = $userId")->fetch_assoc();
+// Buscar as informações do usuário, cidade e estado
+$sql = "SELECT u.*, c.nome AS cidade, e.sigla AS estado 
+        FROM users u 
+        LEFT JOIN cidade c ON u.cidade_id = c.id 
+        LEFT JOIN estado e ON u.estado_id = e.id 
+        WHERE u.id = ?";
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $userId);
+$stmt->execute();
+$user = $stmt->get_result()->fetch_assoc();
 ?>
 
 <!DOCTYPE html>
@@ -120,7 +133,7 @@ $user = $conn->query("SELECT * FROM users WHERE id = $userId")->fetch_assoc();
         }
 
         button:hover {
-            background-color: #007f66;
+            background-color: #276a81;
             transform: translateY(-2px);
         }
 
@@ -190,6 +203,7 @@ $user = $conn->query("SELECT * FROM users WHERE id = $userId")->fetch_assoc();
                 font-size: 0.85rem;
             }
         }
+
         .back-to-profile {
             text-align: center;
             margin-top: 20px;
@@ -198,7 +212,7 @@ $user = $conn->query("SELECT * FROM users WHERE id = $userId")->fetch_assoc();
         .back-to-profile a {
             display: inline-block;
             padding: 10px 15px;
-            background-color: #00bfa6;
+            background-color: #276a81;
             color: white;
             border-radius: 5px;
             text-decoration: none;
@@ -207,7 +221,7 @@ $user = $conn->query("SELECT * FROM users WHERE id = $userId")->fetch_assoc();
         }
 
         .back-to-profile a:hover {
-            background-color: #007f66;
+            background-color: #276a81;
             transform: translateY(-2px);
         }
 

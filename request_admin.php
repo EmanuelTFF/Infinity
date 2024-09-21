@@ -9,9 +9,12 @@ use Dotenv\Dotenv;
 $dotenv = Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-function generateApprovalCode() {
-    return bin2hex(random_bytes(16)); // Gera um código hexadecimal de 32 caracteres
+if (!function_exists('generateApprovalCode')) {
+    function generateApprovalCode() {
+        return bin2hex(random_bytes(4)); // Gera um código aleatório de 8 caracteres
+    }
 }
+
 
 function sendAdminApprovalEmail($user_email, $approval_code) {
     $mail = new PHPMailer(true);
