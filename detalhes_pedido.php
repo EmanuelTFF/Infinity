@@ -10,6 +10,7 @@ if ($conn->connect_error) {
     die("Conexão falhou: " . $conn->connect_error);
 }
 
+// Verificar se o usuário está logado
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit();
@@ -22,8 +23,9 @@ if (!isset($_GET['id'])) {
 
 $order_id = $_GET['id'];
 $user_id = $_SESSION['user_id'];
+$success_message = "";
 
-// Consulta o pedido específico
+// Consulta o pedido específico para verificar se pertence ao usuário logado
 $sql_order = "SELECT * FROM orders WHERE id = ? AND users_id = ?";
 $stmt_order = $conn->prepare($sql_order);
 $stmt_order->bind_param("ii", $order_id, $user_id);
@@ -37,7 +39,7 @@ if (!$order) {
 }
 
 // Consulta os itens do pedido
-$sql_items = "SELECT products.name, orders_items.quantity, products.price 
+$sql_items = "SELECT products.id, products.name, orders_items.quantity, products.price 
               FROM orders_items 
               INNER JOIN products ON orders_items.products_id = products.id 
               WHERE orders_items.order_id = ?";
@@ -45,6 +47,33 @@ $stmt_items = $conn->prepare($sql_items);
 $stmt_items->bind_param("i", $order_id);
 $stmt_items->execute();
 $result_items = $stmt_items->get_result();
+
+// Processar o formulário de avaliação
+// Processar o formulário de avaliação
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['product_id'])) {
+    $product_id = $_POST['product_id'];
+    $rating = isset($_POST['rating']) ? intval($_POST['rating']) : 0;
+    $comment = $conn->real_escape_string($_POST['comment']);
+
+    // Validar o rating
+    if ($rating >= 1 && $rating <= 5) {
+        // Inserir no banco de dados
+        $sql_review = "INSERT INTO product_reviews (users_id, products_id, orders_id, rating, comment) VALUES (?, ?, ?, ?, ?)";
+        $stmt_review = $conn->prepare($sql_review);
+        $stmt_review->bind_param("iiiis", $user_id, $product_id, $order_id, $rating, $comment);
+
+        if ($stmt_review->execute()) {
+            $success_message = "Avaliação postada com sucesso!";
+        } else {
+            $success_message = "Erro ao postar a avaliação. Por favor, tente novamente.";
+        }
+
+        $stmt_review->close();
+    } else {
+        $success_message = "A avaliação deve estar entre 1 e 5 estrelas.";
+    }
+}
+
 ?>
 
 <!DOCTYPE html>
@@ -55,210 +84,155 @@ $result_items = $stmt_items->get_result();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detalhes do Pedido</title>
     <style>
-        /* Reset de margin e padding */
+        /* CSS para estilizar a página */
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
 
-        body {
-            font-family: 'Roboto', sans-serif;
-            background: #bad1e5;
-            color: #333;
-            line-height: 1.6;
-            padding: 20px;
-        }
+body {
+    font-family: 'Roboto', sans-serif;
+    background: #bad1e5;
+    color: #333;
+    line-height: 1.6;
+    padding: 20px;
+}
 
-        .container {
-            width: 90%;
-            max-width: 1200px;
-            margin: auto;
-        }
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
 
-        .page-title {
-            text-align: center;
-            font-size: 2.8rem;
-            color: #333;
-            margin-bottom: 30px;
-            font-weight: 700;
-            position: relative;
-            padding-bottom: 10px;
-        }
+.page-title {
+    text-align: center;
+    font-size: 3rem;
+    color: #333;
+    margin-bottom: 40px;
+    font-weight: 700;
+    position: relative;
+    padding-bottom: 10px;
+    letter-spacing: 1px;
+}
 
-        .page-title::after {
-            content: '';
-            display: block;
-            width: 60px;
-            height: 4px;
-            background: #276a81;
-            position: absolute;
-            left: 50%;
-            bottom: 0;
-            transform: translateX(-50%);
-            border-radius: 5px;
-        }
+.order-details {
+    background: #f7f7f7;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+}
 
-        .order-details {
-            background: #fff;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-            animation: fadeInUp 1s ease-out;
-            border: 1px solid #e0e0e0;
-            transition: transform 0.3s ease, box-shadow 0.3s ease, border 0.3s ease;
-        }
+.order-details p {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    color: #555;
+}
 
-        .order-details:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
-            
-        }
+.order-items li {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    transition: background 0.3s ease;
+}
 
-        .order-details p {
-            font-size: 1.2rem;
-            margin-bottom: 15px;
-            position: relative;
-            padding-left: 30px;
-        }
+.order-items li:hover {
+    background: #f0f0f0;
+}
 
-        .order-details p::before {
-            content: '✔️';
-            position: absolute;
-            left: -5px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1.5rem;
-            color: #007bff;
-        }
+.review-form {
+    background: #ececec;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 30px;
+    transition: transform 0.3s ease;
+}
 
-        .order-items {
-            list-style: none;
-            padding: 0;
-        }
+.review-form:hover {
+    transform: translateY(-5px);
+}
 
-        .order-items li {
-            background: #f9f9f9;
-            border: 1px solid #ddd;
-            border-radius: 12px;
-            padding: 15px;
-            margin-bottom: 15px;
-            animation: fadeIn 0.8s ease-out;
-            transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-        }
+.review-form h3 {
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    color: #333;
+}
 
-        .order-items li:nth-child(even) {
-            background: #ececec;
-        }
+.rating-stars {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
 
-        .order-items li:hover {
-            background: #e0e0e0;
-            transform: scale(1.02);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        }
+.rating-stars input[type="radio"] {
+    display: none;
+}
 
-        .back-btn {
-            display: block;
-            width: 100%;
-            padding: 15px;
-            font-size: 1.1rem;
-            color: #fff;
-            background:  #276a81;
-            border: none;
-            border-radius: 12px;
-            cursor: pointer;
-            text-align: center;
-            transition: background 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-            text-decoration: none;
-            margin-top: 30px;
-        }
+.rating-stars label {
+    font-size: 2.5rem;
+    color: #ccc;
+    transition: color 0.2s ease;
+    cursor: pointer;
+}
 
-        .back-btn:hover {
-            background: #276a81;
-            transform: scale(1.05);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
-        }
+.rating-stars input[type="radio"]:checked ~ label {
+    color: gold;
+}
 
-        /* Animações */
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
+textarea {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    font-size: 1rem;
+    color: #555;
+}
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+textarea:focus {
+    border-color: #276a81;
+    outline: none;
+}
 
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
+button[type="submit"], .back-btn {
+    background: #276a81;
+    color: #fff;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
+button[type="submit"]:hover, .back-btn:hover {
+    background: #276a81;
+}
 
-        @keyframes slideInDown {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
+.success-message {
+    color: green;
+    font-size: 1.2rem;
+    margin-top: 20px;
+    text-align: center;
+    font-weight: bold;
+}
 
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Responsividade */
-        @media (max-width: 768px) {
-            .container {
-                width: 95%;
-                padding: 10px;
-            }
-
-            .page-title {
-                font-size: 2.2rem;
-            }
-
-            .order-details p {
-                font-size: 1rem;
-            }
-
-            .back-btn {
-                font-size: 1rem;
-                padding: 12px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .page-title {
-                font-size: 1.8rem;
-            }
-
-            .order-details p {
-                font-size: 0.9rem;
-            }
-
-            .back-btn {
-                font-size: 0.9rem;
-                padding: 10px;
-            }
-        }
     </style>
 </head>
 
 <body>
     <div class="container">
         <h1 class="page-title">Detalhes do Pedido</h1>
-        <div class="order-details" data-aos="fade-up">
 
+        <div class="order-details">
             <p><strong>Data do Pedido:</strong> <?= date("d/m/Y", strtotime($order['order_date'])); ?></p>
             <p><strong>Total Pago:</strong> R$ <?= number_format($order['total'], 2, ',', '.'); ?></p>
             <p><strong>Endereço de Entrega:</strong> <?= $order['customer_address']; ?></p>
@@ -268,20 +242,45 @@ $result_items = $stmt_items->get_result();
             <ul class="order-items">
                 <?php while ($item = $result_items->fetch_assoc()): ?>
                     <li>
-                        <?= $item['name']; ?> - Quantidade: <?= $item['quantity']; ?> -
-                        Preço: R$ <?= number_format($item['price'], 2, ',', '.'); ?>
+                        <?= $item['name']; ?> - Quantidade: <?= $item['quantity']; ?> - Preço: R$ <?= number_format($item['price'], 2, ',', '.'); ?>
+
+                        <!-- Formulário para adicionar avaliação -->
+                        <div class="review-form">
+                            <h3>Avalie este Produto:</h3>
+                            <form action="" method="post">
+                                <input type="hidden" name="product_id" value="<?= $item['id']; ?>">
+                                <div class="rating-stars">
+                                    <input type="radio" id="star5-<?= $item['id']; ?>" name="rating" value="5">
+                                    <label for="star5-<?= $item['id']; ?>">&#9733;</label>
+
+                                    <input type="radio" id="star4-<?= $item['id']; ?>" name="rating" value="4">
+                                    <label for="star4-<?= $item['id']; ?>">&#9733;</label>
+
+                                    <input type="radio" id="star3-<?= $item['id']; ?>" name="rating" value="3">
+                                    <label for="star3-<?= $item['id']; ?>">&#9733;</label>
+
+                                    <input type="radio" id="star2-<?= $item['id']; ?>" name="rating" value="2">
+                                    <label for="star2-<?= $item['id']; ?>">&#9733;</label>
+
+                                    <input type="radio" id="star1-<?= $item['id']; ?>" name="rating" value="1">
+                                    <label for="star1-<?= $item['id']; ?>">&#9733;</label>
+                                </div>
+                                <textarea name="comment" rows="4" style="width: 100%;" placeholder="Deixe seu comentário"></textarea>
+                                <button type="submit">Enviar Avaliação</button>
+                            </form>
+                        </div>
                     </li>
                 <?php endwhile; ?>
             </ul>
-
             <button class="back-btn" onclick="window.location.href='meus_pedidos.php'">Voltar para Meus Pedidos</button>
         </div>
+
+        <!-- Mensagem de sucesso -->
+        <?php if ($success_message): ?>
+            <div class="success-message"><?= $success_message; ?></div>
+        <?php endif; ?>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-    <script>
-        AOS.init();
-    </script>
 </body>
 
 </html>

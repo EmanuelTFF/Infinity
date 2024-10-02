@@ -1,84 +1,89 @@
 <?php
 session_start();
 
-// Carregar as variáveis de ambiente do .env
-require __DIR__ . '/vendor/autoload.php'; // Certifique-se de que o autoload do Composer está correto
+// Conectar ao banco de dados
+require __DIR__ . '/vendor/autoload.php';
 $dotenv = Dotenv\Dotenv::createImmutable(__DIR__);
 $dotenv->load();
 
-// Criar a conexão com o banco de dados usando as variáveis de ambiente
 $conn = new mysqli(
-    $_ENV['DB_HOST'], 
-    $_ENV['DB_USER'], 
-    $_ENV['DB_PASS'], 
+    $_ENV['DB_HOST'],
+    $_ENV['DB_USER'],
+    $_ENV['DB_PASS'],
     $_ENV['DB_NAME']
 );
 
-// Verifique a conexão
+// Verificar conexão
 if ($conn->connect_error) {
     die("Falha na conexão: " . $conn->connect_error);
 }
 
-// Verifique se o usuário está logado
+// Verificar se o usuário está logado
 if (!isset($_SESSION['email'])) {
     header("Location: login.php");
     exit();
 }
 
-// Verifique se o usuário é administrador
+$userId = $_SESSION['user_id']; // Certifique-se de que o ID do usuário está armazenado na sessão
 $isAdmin = isset($_SESSION['status']) && $_SESSION['status'] == 'approved';
-
 $full_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "Usuário";
 
-// Função para buscar todos os usuários (somente para administradores)
-function fetchUsers($conn) {
-    $sql = "SELECT * FROM users";
-    $result = $conn->query($sql);
+// Função para buscar a imagem de perfil do usuário no banco de dados
+function fetchProfileImage($conn, $userId)
+{
+    $sql = "SELECT profile_image FROM users WHERE id = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+    $stmt->bind_result($profileImage);
+    $stmt->fetch();
+    $stmt->close();
 
-    if ($result->num_rows > 0) {
-        return $result->fetch_all(MYSQLI_ASSOC);
+    return $profileImage;
+}
+
+// Caminho padrão da imagem de perfil, caso o usuário ainda não tenha uma
+$defaultProfileImage = 'uploads/profile_images/avatar.jpg';
+
+// Buscar a imagem de perfil do usuário
+$profileImage = fetchProfileImage($conn, $userId);
+if (!$profileImage) {
+    $profileImage = $defaultProfileImage;
+}
+
+// Verifique se o arquivo foi enviado e faça o upload da imagem de perfil
+if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
+    $uploadDir = 'uploads/'; // Diretório para armazenar as imagens
+    $uploadFile = $uploadDir . 'profile_' . $userId . '.png'; // Nome do arquivo de perfil baseado no ID do usuário
+
+    // Verifica se o diretório existe, se não existir, cria o diretório
+    if (!file_exists($uploadDir)) {
+        mkdir($uploadDir, 0777, true);
+    }
+
+    // Move o arquivo enviado para o diretório de uploads
+    if (move_uploaded_file($_FILES['profile_image']['tmp_name'], $uploadFile)) {
+        // Atualizar o caminho da imagem no banco de dados
+        $sql = "UPDATE users SET profile_image = ? WHERE id = ?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("si", $uploadFile, $userId);
+        $stmt->execute();
+        $stmt->close();
+
+        // Atualizar a variável de sessão
+        $_SESSION['profile_image'] = $uploadFile;
+
+        // Atualizar a imagem exibida
+        $profileImage = $uploadFile;
     } else {
-        return [];
+        echo "Erro ao fazer o upload da imagem.";
     }
 }
 
-// Função para excluir um usuário
-function deleteUser($conn, $userId) {
-    $sql = "DELETE FROM users WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $userId);
-    return $stmt->execute();
-}
-
-// Função para atualizar um usuário
-function updateUser($conn, $userId, $fullName, $email, $status) {
-    $sql = "UPDATE users SET full_name = ?, email = ?, status = ? WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("sssi", $fullName, $email, $status, $userId);
-    return $stmt->execute();
-}
-
-// Verificar se a ação de exclusão foi solicitada
-if ($isAdmin && isset($_POST['delete_user'])) {
-    $userId = $_POST['user_id'];
-    deleteUser($conn, $userId);
-    echo "<script>alert('Usuário excluído com sucesso!'); window.location.href='perfil.php';</script>";
-    exit();
-}
-
-// Verificar se a ação de atualização foi solicitada
-if ($isAdmin && isset($_POST['update_user'])) {
-    $userId = $_POST['user_id'];
-    $fullName = $_POST['full_name'];
-    $email = $_POST['email'];
-    $status = $_POST['status'];
-    updateUser($conn, $userId, $fullName, $email, $status);
-    echo "<script>alert('Usuário atualizado com sucesso!'); window.location.href='perfil.php';</script>";
-    exit();
-}
 ?>
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -88,6 +93,37 @@ if ($isAdmin && isset($_POST['update_user'])) {
     <link rel="stylesheet" href="css/style.css">
     <title>Infinity Tech - Perfil</title>
     <style>
+        .profile-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Centraliza horizontalmente */
+            margin-top: 50px;
+            /* Espaçamento superior */
+        }
+
+        .profile-pic {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 10px;
+            /* Espaçamento entre a imagem e o botão */
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        form {
+            margin: 0;
+            /* Remove margens extras do formulário */
+            padding: 0;
+            /* Remove preenchimento extra do formulário */
+        }
+
+
         body {
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
@@ -146,7 +182,8 @@ if ($isAdmin && isset($_POST['update_user'])) {
             border-collapse: collapse;
         }
 
-        .admin-section th, .admin-section td {
+        .admin-section th,
+        .admin-section td {
             padding: 10px;
             text-align: left;
             border-bottom: 1px solid #ddd;
@@ -194,7 +231,8 @@ if ($isAdmin && isset($_POST['update_user'])) {
                 white-space: nowrap;
             }
 
-            .admin-section th, .admin-section td {
+            .admin-section th,
+            .admin-section td {
                 white-space: nowrap;
             }
 
@@ -208,93 +246,78 @@ if ($isAdmin && isset($_POST['update_user'])) {
         }
     </style>
 </head>
-<body>
-<header>
-    <nav class="navigation">
-        <a href="#" class="logo">Infi<span>ni</span>ty<span>te</span>ch</a>
-        <div class="nav">
-            <a href="cart.php" onclick="toggleCart()"><i class='bx bx-cart-alt'> Carrinho</i></a>
-        </div>
-        <ul class="nav-menu">
-            <li class="nav-item"><a href="index.php">Inicio</a></li>
-            <li class="nav-item"><a href="#">Produtos</a></li>
-            <li class="nav-item"><a href="help.html">Ajuda</a></li>
-            <li class="nav-item"><a href="perfil.php">Perfil</a></li>
-        </ul>
-        <div class="menu" onclick="toggleMenu()">
-            <span class="bar"></span>
-            <span class="bar"></span>
-            <span class="bar"></span>
-        </div>
-    </nav>
-</header>
 
-<!-- Cart Sidebar -->
-<div id="cartSidebar" class="cart-sidebar">
-    <a href="javascript:void(0)" class="closebtn" onclick="toggleCart()">&times;</a>
-    <h2></h2>
-    <div class="cart-items">
-        <!-- Itens do carrinho aqui -->
+<body>
+    <header>
+        <nav class="navigation">
+            <a href="#" class="logo">Infi<span>ni</span>ty<span>te</span>ch</a>
+            <div class="nav">
+                <a href="cart.php" onclick="toggleCart()"><i class='bx bx-cart-alt'> Carrinho</i></a>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item"><a href="index.php">Inicio</a></li>
+                <li class="nav-item"><a href="#">Produtos</a></li>
+                <li class="nav-item"><a href="help.html">Ajuda</a></li>
+                <li class="nav-item"><a href="perfil.php">Perfil</a></li>
+            </ul>
+            <div class="menu" onclick="toggleMenu()">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Cart Sidebar -->
+    <div id="cartSidebar" class="cart-sidebar">
+        <a href="javascript:void(0)" class="closebtn" onclick="toggleCart()">&times;</a>
+        <h2></h2>
+        <div class="cart-items">
+            <!-- Itens do carrinho aqui -->
+        </div>
     </div>
-</div>
-<main>
-    <br><br><br><br>
-    <section class="container">
-        <div class="header">
-            <h2>Olá, <?php echo htmlspecialchars($full_name); ?></h2>
-        </div>
-        <div class="grid">
-            <a href="forgot_password.php">
-                <i class='bx bx-key'></i>
-                <p>Trocar senha</p>
-            </a>
-            <a href="meus_pedidos.php">
-                <i class='bx bx-cart'></i>
-                <p>Meus pedidos</p>
-            </a>
-            <a href="my_addresses.php">
-                <i class='bx bx-map'></i>
-                <p>Meus Endereços</p>
-            </a>
-            <a href="logout.php">
-                <i class='bx bx-log-out'></i>
-                <p>Sair</p>
-            </a>
-        </div>
-        <?php if ($isAdmin) : ?>
-        <div class="admin-section">
-            <h3>Usuários Cadastrados</h3>
-            <table>
-                <tr>
-                    <th>ID</th>
-                    <th>Nome Completo</th>
-                    <th>Email</th>
-                    <th>Status</th>
-                    <th>Ações</th>
-                </tr>
-                <?php
-                $users = fetchUsers($conn);
-                foreach ($users as $user) {
-                    echo "<tr>";
-                    echo "<td>" . htmlspecialchars($user['id']) . "</td>";
-                    echo "<form method='POST' action='perfil.php'>";
-                    echo "<td><input type='text' name='full_name' value='" . htmlspecialchars($user['full_name']) . "'></td>";
-                    echo "<td><input type='email' name='email' value='" . htmlspecialchars($user['email']) . "'></td>";
-                    echo "<td><input type='text' name='status' value='" . htmlspecialchars($user['status']) . "'></td>";
-                    echo "<td>
-                            <input type='hidden' name='user_id' value='" . htmlspecialchars($user['id']) . "'>
-                            <button type='submit' name='update_user'>Atualizar</button>
-                            <button type='submit' name='delete_user'>Excluir</button>
-                          </td>";
-                    echo "</form>";
-                    echo "</tr>";
-                }
-                ?>
-            </table>
-        </div>
-        <?php endif; ?>
-    </section>
-</main>
+    <main>
+        <br><br><br><br>
+        <section class="container">
+            <div class="header">
+                <h2>Olá, <?php echo htmlspecialchars($full_name); ?></h2>
+            </div>
+
+            <div class="profile-section">
+                <!-- Exibir a imagem de perfil -->
+                <img src="<?php echo htmlspecialchars($profileImage); ?>" class="profile-pic" alt="Foto de Perfil">
+
+                <!-- Formulário para alterar a imagem de perfil -->
+                <form method="POST" action="perfil.php" enctype="multipart/form-data">
+                    <input type="file" name="profile_image" accept="image/*" onchange="this.form.submit()"
+                        style="display: none;" id="fileInput">
+                    <button type="button" onclick="document.getElementById('fileInput').click()">Alterar Foto de
+                        Perfil</button>
+                </form>
+            </div>
+
+
+            <div class="grid">
+                <a href="forgot_password.php">
+                    <i class='bx bx-key'></i>
+                    <p>Trocar senha</p>
+                </a>
+                <a href="meus_pedidos.php">
+                    <i class='bx bx-cart'></i>
+                    <p>Meus pedidos</p>
+                </a>
+                <a href="my_addresses.php">
+                    <i class='bx bx-map'></i>
+                    <p>Meus Endereços</p>
+                </a>
+                <a href="logout.php">
+                    <i class='bx bx-log-out'></i>
+                    <p>Sair</p>
+                </a>
+            </div>
+        </section>
+    </main>
 </body>
 <script src="js/script.js"></script>
+
 </html>

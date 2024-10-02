@@ -25,6 +25,7 @@ if ($product_id === null) {
     echo 'ID de produto não fornecido!';
     exit;
 }
+
 // Consultar detalhes do produto
 $stmt = $pdo->prepare('SELECT * FROM products WHERE id = :id');
 $stmt->execute([':id' => $product_id]);
@@ -35,6 +36,16 @@ if (!$product) {
     echo 'Produto não encontrado!';
     exit;
 }
+
+// Consultar avaliações para o produto usando o campo correto 'full_name'
+$sql_reviews = 'SELECT pr.rating, pr.comment, u.full_name 
+                FROM product_reviews pr 
+                INNER JOIN users u ON pr.users_id = u.id 
+                WHERE pr.products_id = :product_id 
+                ORDER BY pr.id DESC';
+$stmt_reviews = $pdo->prepare($sql_reviews);
+$stmt_reviews->execute([':product_id' => $product_id]);
+$reviews = $stmt_reviews->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="pt-br">
@@ -42,10 +53,10 @@ if (!$product) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo $product['name']; ?></title>
+    <title><?php echo htmlspecialchars($product['name']); ?></title>
     <style>
-          /* Seu CSS de estilização permanece igual */
-          * {
+        /* Estilo CSS */
+        * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
@@ -78,7 +89,7 @@ if (!$product) {
         .container {
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start;
             gap: 20px;
             margin: 0 auto;
         }
@@ -158,6 +169,48 @@ if (!$product) {
             transform: translateY(-5px);
         }
 
+        .review-section {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0px 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .review-section h2 {
+            margin-bottom: 20px;
+            color: #276a81;
+        }
+
+        .review {
+            margin-bottom: 15px;
+            padding: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .review .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .review .review-header h4 {
+            margin: 0;
+            color: #555;
+        }
+
+        .review .review-header .stars {
+            color: gold;
+        }
+
+        .review .review-content {
+            margin-top: 10px;
+        }
+
+        .review .review-content p {
+            margin: 0;
+        }
+
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
@@ -184,18 +237,18 @@ if (!$product) {
     <div class="breadcrumbs">
         <a href="index.php">Início</a> >
         <a href="products.php">Produtos</a> >
-        <span><?php echo $product['name']; ?></span>
+        <span><?php echo htmlspecialchars($product['name']); ?></span>
     </div>
 
     <div class="container">
         <!-- Galeria de Imagens -->
         <div class="image-gallery">
-            <img src="<?php echo $product['image_url']; ?>" alt="<?php echo $product['name']; ?>">
+            <img src="<?php echo htmlspecialchars($product['image_url']); ?>" alt="<?php echo htmlspecialchars($product['name']); ?>">
         </div>
 
         <!-- Detalhes do Produto -->
         <div class="product-details">
-            <h1><?php echo $product['name']; ?></h1>
+            <h1><?php echo htmlspecialchars($product['name']); ?></h1>
             <p class="original-price">De: R$ 2.067,59</p>
             <p class="price">Por: R$<?php echo number_format($product['price'], 2, ',', '.'); ?></p>
             <p class="parcelamento">Em até 12x de R$78,42 sem juros no cartão</p>
@@ -206,6 +259,32 @@ if (!$product) {
                 <button type="submit" class="btn-add-cart">Adicionar ao Carrinho</button>
             </form>
         </div>
+    </div>
+<br>
+<br>
+
+    <!-- Seção de Avaliações -->
+    <div class="review-section">
+        <h2>Avaliações</h2>
+        <?php if (!empty($reviews)): ?>
+            <?php foreach ($reviews as $review): ?>
+                <div class="review">
+                    <div class="review-header">
+                        <h4><?php echo htmlspecialchars($review['full_name']); ?></h4>
+                        <div class="stars">
+                            <?php for ($i = 1; $i <= 5; $i++): ?>
+                                <span><?php echo $i <= $review['rating'] ? '★' : '☆'; ?></span>
+                            <?php endfor; ?>
+                        </div>
+                    </div>
+                    <div class="review-content">
+                        <p><?php echo htmlspecialchars($review['comment']); ?></p>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <p>Não há avaliações para este produto.</p>
+        <?php endif; ?>
     </div>
 
 </body>

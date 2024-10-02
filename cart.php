@@ -31,6 +31,56 @@ $stmt->execute();
 $result_endereco = $stmt->get_result();
 $user_endereco = $result_endereco->fetch_assoc();
 
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['cep'])) {
+    // Supondo que você já tenha validado os dados
+    $cep = $_POST['cep'];
+    $logradouro = $_POST['logradouro'];
+    $bairro = $_POST['bairro'];
+    $cidade_nome = $_POST['cidade'];
+    $estado_sigla = $_POST['estado'];
+    $numero = $_POST['numero'];
+
+    // Buscar o ID da cidade com base no nome
+    $sql_cidade = "SELECT id FROM cidade WHERE nome = ?";
+    $stmt_cidade = $conn->prepare($sql_cidade);
+    $stmt_cidade->bind_param("s", $cidade_nome);
+    $stmt_cidade->execute();
+    $result_cidade = $stmt_cidade->get_result();
+    $cidade = $result_cidade->fetch_assoc();
+
+    if (!$cidade) {
+        die("Cidade não encontrada");
+    }
+    $cidade_id = $cidade['id'];
+
+    // Buscar o ID do estado com base na sigla
+    $sql_estado = "SELECT id FROM estado WHERE sigla = ?";
+    $stmt_estado = $conn->prepare($sql_estado);
+    $stmt_estado->bind_param("s", $estado_sigla);
+    $stmt_estado->execute();
+    $result_estado = $stmt_estado->get_result();
+    $estado = $result_estado->fetch_assoc();
+
+    if (!$estado) {
+        die("Estado não encontrado");
+    }
+    $estado_id = $estado['id'];
+
+    // Atualizar o endereço do usuário com os IDs de cidade e estado
+    $sql_save_address = "UPDATE users SET cep = ?, logradouro = ?, bairro = ?, cidade_id = ?, estado_id = ?, numero = ?, endereco_salvo = 1 WHERE id = ?";
+    $stmt = $conn->prepare($sql_save_address);
+    $stmt->bind_param("sssiisi", $cep, $logradouro, $bairro, $cidade_id, $estado_id, $numero, $user_id);
+
+    if ($stmt->execute()) {
+        header("Location: ?success=true");
+        exit();
+    } else {
+        die("Erro ao salvar endereço.");
+    }
+}
+
+
+
 // Se não houver endereço salvo (campo 'endereco_salvo' for 0), mostrar o formulário
 $mostrar_formulario_endereco = ($user_endereco['endereco_salvo'] == 0);
 
@@ -284,7 +334,6 @@ $result = $stmt->get_result();
 
 
 
-
     </style>
 </head>
 
@@ -318,25 +367,50 @@ $result = $stmt->get_result();
 
     <main class="container mx-auto px-4 py-8">
         <h1 class="text-2xl font-bold mb-4">Carrinho de Compras</h1>
-
-        <!-- Formulário de Endereço -->
         <?php if ($mostrar_formulario_endereco): ?>
-            <div class="space-y-4">
-                <form method="POST" action="">
-                    <input type="text" name="cep" placeholder="CEP" required />
-                    <input type="text" name="logradouro" placeholder="Logradouro" required />
-                    <input type="text" name="bairro" placeholder="Bairro" required />
-                    <input type="text" name="cidade" placeholder="Cidade" required />
-                    <input type="text" name="estado" placeholder="Estado" required />
-                    <input type="text" name="numero" placeholder="Número" required />
-                    <button type="submit">Salvar Endereço</button>
-                </form>
+    <div class="space-y-4">
+        <form method="POST" action="">
+            <input type="text" id="cep" name="cep" placeholder="CEP" required onblur="buscarCep(this.value)" />
+            <input type="text" id="logradouro" name="logradouro" placeholder="Logradouro" required />
+            <input type="text" id="bairro" name="bairro" placeholder="Bairro" required />
+            <input type="text" id="cidade" name="cidade" placeholder="Cidade" required />
+            <input type="text" id="estado" name="estado" placeholder="Estado" required />
+            <input type="text" id="numero" name="numero" placeholder="Número" required />
+            <button type="submit">Salvar Endereço</button>
+        </form>
+    </div>
+<?php else: ?>
+    <p class="text-green-500">Endereço já salvo.</p>
+<?php endif; ?>
 
+<script>
+    function buscarCep(cep) {
+        // Remove qualquer caractere que não seja número
+        cep = cep.replace(/\D/g, '');
 
-            </div>
-        <?php else: ?>
-            <p class="text-green-500">Endereço já salvo.</p>
-        <?php endif; ?>
+        if (cep.length === 8) { // Verifica se o CEP tem 8 dígitos
+            fetch(`https://viacep.com.br/ws/${cep}/json/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.erro) {
+                        // Preenche os campos com os dados recebidos
+                        document.getElementById('logradouro').value = data.logradouro;
+                        document.getElementById('bairro').value = data.bairro;
+                        document.getElementById('cidade').value = data.localidade;
+                        document.getElementById('estado').value = data.uf;
+                    } else {
+                        alert('CEP não encontrado.');
+                    }
+                })
+                .catch(error => {
+                    alert('Erro ao buscar o CEP. Tente novamente.');
+                    console.error(error);
+                });
+        } else {
+            alert('CEP inválido. Digite um CEP com 8 dígitos.');
+        }
+    }
+</script>
 
         <div class="space-y-4 mt-8">
             <!-- Exibir Itens do Carrinho -->

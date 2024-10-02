@@ -43,7 +43,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             $mail->isHTML(true);
             $mail->Subject = 'Redefinição de Senha';
-            $mail->Body = "Clique no link para redefinir sua senha: <a href='http://localhost/login/reset_password_confirm.php?token=$token'>Redefinir Senha</a>";
+            $mail->Body = "Clique no link para redefinir sua senha: <a href='http://localhost/infinity/reset_password_confirm.php?token=$token'>Redefinir Senha</a>";
             
             $mail->send();
             $message = 'Link de redefinição de senha enviado!<br>verifique sua caixa de e-mail';

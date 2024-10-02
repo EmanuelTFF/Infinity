@@ -123,8 +123,8 @@ function sendAdminApprovalEmail($user_email, $approval_code) {
                     <p><strong>Email do usuário:</strong> " . htmlspecialchars($user_email) . "</p>
                     <p>Para aprovar ou negar o pedido, clique em um dos links abaixo:</p>
                     <p>
-                        <a class='approval-link' href='http://localhost/login/approve_admin.php?action=approve&code=" . urlencode($approval_code) . "&email=" . urlencode($user_email) . "'>Aprovar</a>
-                        <a class='deny-link' href='http://localhost/login/approve_admin.php?action=deny&code=" . urlencode($approval_code) . "&email=" . urlencode($user_email) . "'>Negar</a>
+                        <a class='approval-link' href='http://localhost/infinity/approve_admin.php?action=approve&code=" . urlencode($approval_code) . "&email=" . urlencode($user_email) . "'>Aprovar</a>
+                        <a class='deny-link' href='http://localhost/infinty/approve_admin.php?action=deny&code=" . urlencode($approval_code) . "&email=" . urlencode($user_email) . "'>Negar</a>
                     </p>
                     <p>Este link expira em 24 horas.</p>
                 </div>
