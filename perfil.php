@@ -32,14 +32,20 @@ $full_name = isset($_SESSION['full_name']) ? $_SESSION['full_name'] : "Usuário"
 function fetchProfileImage($conn, $userId)
 {
     $sql = "SELECT profile_image FROM users WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $userId);
-    $stmt->execute();
-    $stmt->bind_result($profileImage);
-    $stmt->fetch();
-    $stmt->close();
+    if ($stmt = $conn->prepare($sql)) {
+        $stmt->bind_param("i", $userId);
+        $stmt->execute();
 
-    return $profileImage;
+        // Inicia o resultado como uma string vazia
+        $profileImage = '';
+        $stmt->bind_result($profileImage);
+        $stmt->fetch();
+        $stmt->close();
+        return $profileImage;
+    } else {
+        echo "Erro ao preparar a consulta: " . $conn->error;
+        return null;
+    }
 }
 
 // Caminho padrão da imagem de perfil, caso o usuário ainda não tenha uma
@@ -51,6 +57,7 @@ if (!$profileImage) {
     $profileImage = $defaultProfileImage;
 }
 
+// Verifique se o arquivo foi enviado e faça o upload da imagem de perfil
 // Verifique se o arquivo foi enviado e faça o upload da imagem de perfil
 if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPLOAD_ERR_OK) {
     $uploadDir = 'uploads/'; // Diretório para armazenar as imagens
@@ -75,10 +82,15 @@ if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPL
 
         // Atualizar a imagem exibida
         $profileImage = $uploadFile;
+
+        // Redirecionar para evitar o reenvio do formulário após o upload
+        header("Location: perfil.php");
+        exit();
     } else {
         echo "Erro ao fazer o upload da imagem.";
     }
 }
+
 
 ?>
 <!DOCTYPE html>
@@ -285,7 +297,8 @@ if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPL
 
             <div class="profile-section">
                 <!-- Exibir a imagem de perfil -->
-                <img src="<?php echo htmlspecialchars($profileImage); ?>" class="profile-pic" alt="Foto de Perfil">
+                <img id="profileImage" src="<?php echo htmlspecialchars($profileImage); ?>" class="profile-pic"
+                    alt="Foto de Perfil">
 
                 <!-- Formulário para alterar a imagem de perfil -->
                 <form method="POST" action="perfil.php" enctype="multipart/form-data">
@@ -295,6 +308,22 @@ if (isset($_FILES['profile_image']) && $_FILES['profile_image']['error'] === UPL
                         Perfil</button>
                 </form>
             </div>
+
+            <script>
+                document.getElementById('fileInput').addEventListener('change', function () {
+                    const file = this.files[0];
+                    const reader = new FileReader();
+
+                    reader.onload = function (e) {
+                        document.getElementById('profileImage').src = e.target.result; // Atualiza a imagem no site
+                    }
+
+                    if (file) {
+                        reader.readAsDataURL(file); // Lê o arquivo como um URL de dados
+                    }
+                });
+            </script>
+
 
 
             <div class="grid">
