@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ajuda - Infinity Tech</title>
+    <link rel="stylesheet" href="css/help.css">
+</head>
+<body>
+    <!-- Breadcrumb para navegação -->
+    <div class="breadcrumb">
+        <a href="index.php">Início</a>
+        <span>/</span>
+        <a href="#">Ajuda</a>
+    </div>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>Ajuda - infinity-bot</h2>
+        </div>
+        <div class="chat-body">
+            <div class="bot-message">
+                <p>Olá! Como posso te ajudar hoje?</p>
+            </div>
+            <div class="faq">
+                <h3>Perguntas Frequentes</h3>
+                <ul>
+                    <li onclick="sendFaq('Como faço para alterar meu perfil?')">Como faço para alterar meu perfil?</li>
+                    <li onclick="sendFaq('Quais são as formas de pagamento aceitas?')">Quais são as formas de pagamento aceitas?</li>
+                    <li onclick="sendFaq('Como rastrear meu pedido?')">Como rastrear meu pedido?</li>
+                    <li onclick="sendFaq('Posso cancelar minha compra?')">Posso cancelar minha compra?</li>
+                </ul>
+            </div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="userInput" placeholder="Digite sua mensagem...">
+            <button onclick="sendMessage()">Enviar</button>
+        </div>
+    </div>
+    
+    <script src="js/help.js"></script>
+</body>
+</html>

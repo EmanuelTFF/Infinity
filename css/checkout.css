@@ -1,0 +1,121 @@
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #bad1e5; /* Fundo azul claro */
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    flex-direction: column; /* Alinhar itens na vertical */
+}
+.container {
+    max-width: 1000px;
+    background-color: #fff;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+    border-radius: 10px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.product-card,
+.form-card {
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.05);
+    background-color: #f9f9f9;
+}
+
+.product-card img {
+    max-width: 100%;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.product-card h2 {
+    font-size: 24px;
+    margin-bottom: 10px;
+}
+
+.product-card p {
+    font-size: 20px;
+    color: #20596c;
+}
+
+.form-card h1 {
+    font-size: 28px;
+    margin-bottom: 20px;
+    color: #20596c;
+    text-align: center;
+}
+
+.form-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.form-card label {
+    font-size: 14px;
+    color: #20596c;
+    margin-bottom: 5px;
+}
+
+.form-card input,
+.form-card select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    box-sizing: border-box; /* Certifica-se de que o padding e a largura se combinem corretamente */
+}
+
+.form-card input:focus,
+.form-card select:focus {
+    border-color: #20596c;
+    outline: none;
+}
+
+.form-card button {
+    width: 100%;
+    background-color: #20596c;
+    color: #fff;
+    font-size: 18px;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.form-card button:hover {
+    background-color: #1a4452;
+}
+
+#card_details {
+    display: none;
+}
+
+@media (min-width: 768px) {
+    .container {
+        flex-direction: row;
+    }
+
+    .product-card,
+    .form-card {
+        width: 48%;
+    }
+}
+.back-arrow {
+    display: inline-block;
+    font-size: 24px;
+    color: #000;
+    text-decoration: none;
+    margin-bottom: 20px;
+    margin-top: 10px;
+}
